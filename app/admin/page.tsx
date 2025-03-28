@@ -1,103 +1,207 @@
-'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+type Post = {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: string;
+};
 
 export default function AdminPage() {
-  const [claim, setClaim] = useState('')
-  const [answer, setAnswer] = useState('')
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/auth');
+      return;
+    }
+    fetchPosts();
+  }, [router]);
+
+  async function fetchPosts() {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/posts', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/auth');
+      return;
+    }
+    const data = await res.json();
+    setPosts(data);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
 
-    try {
-      // Create new fact
-      await fetch('/api/facts', {
-        method: 'POST',
-        body: JSON.stringify({ claim, answer }),
-        headers: { 'Content-Type': 'application/json' },
+    const token = localStorage.getItem('token');
+
+    if (editingPostId) {
+      // Edit mode
+      await fetch(`/api/posts/${editingPostId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title, content }),
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
-      // Clear form after submission
-      setClaim('')
-      setAnswer('')
-      
-      // Redirect to the home page
-      router.push('/')
-    } catch (error) {
-      console.error('Error saving fact:', error);
-    } finally {
-      setLoading(false);
+      setEditingPostId(null);
+    } else {
+      // Create mode
+      await fetch('/api/posts', {
+        method: 'POST',
+        body: JSON.stringify({ title, content }),
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
     }
+
+    setTitle('');
+    setContent('');
+    await fetchPosts();
+    setLoading(false);
+  }
+
+  async function handleDelete(id: number) {
+    const token = localStorage.getItem('token');
+    await fetch(`/api/posts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    await fetchPosts();
+  }
+
+  function handleEdit(post: Post) {
+    setEditingPostId(post.id);
+    setTitle(post.title);
+    setContent(post.content);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/auth');
   }
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-[800px]">
-        <h1 className="text-2xl font-bold">Create New Fact Check</h1>
-        
-        {/* Writing Interface */}
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
-          {/* Claim Input */}
-          <div className="space-y-2">
-            <label htmlFor="claim" className="block font-semibold">
-              Claim
-            </label>
-            <textarea
-              id="claim"
-              value={claim}
-              onChange={(e) => setClaim(e.target.value)}
-              className="w-full h-24 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-              placeholder="Enter the claim to be fact-checked..."
-              required
-            />
+        <div className="w-full">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold">Blog</h1>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              Logout
+            </button>
           </div>
 
-          {/* Answer Input */}
-          <div className="space-y-2">
-            <label htmlFor="answer" className="block font-semibold">
-              Answer
-            </label>
-            <textarea
-              id="answer"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="w-full h-32 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-              placeholder="Enter the fact-check answer..."
-              required
-            />
-          </div>
-
-          {/* Preview Card */}
-          <div className="mt-8">
-            <h2 className="text-lg font-bold mb-4">Preview</h2>
-            <div className="border-2 border-gray-300 rounded-lg p-6 shadow-md">
-              <div className="mb-4">
-                <h2 className="font-bold text-lg">Claim:</h2>
-                <p className="mt-2">{claim || 'Your claim will appear here'}</p>
+          <div className="border-2 border-gray-300 rounded-lg p-6 shadow-md mb-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  Post Title
+                </label>
+                <input
+                  id="title"
+                  type="text"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  placeholder="Enter post title"
+                />
               </div>
               <div>
-                <h2 className="font-bold text-lg">Answer:</h2>
-                <p className="mt-2">{answer || 'Your answer will appear here'}</p>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+                  Post Content
+                </label>
+                <textarea
+                  id="content"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px]"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Enter post content"
+                />
               </div>
-            </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {editingPostId ? (loading ? 'Saving...' : 'Update Post') : (loading ? 'Creating...' : 'Create Post')}
+                </button>
+                {editingPostId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPostId(null);
+                      setTitle('');
+                      setContent('');
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : 'Save Fact Check'}
-          </button>
-        </form>
+          <div className="space-y-6">
+            {posts.map((post) => (
+              <div key={post.id} className="border-2 border-gray-300 rounded-lg p-6 shadow-md">
+                <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                <p className="text-gray-700 mb-4">{post.content}</p>
+                <div className="flex justify-between items-center">
+                  <small className="text-gray-500">
+                    Posted on {new Date(post.createdAt).toLocaleString()}
+                  </small>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(post)}
+                      className="text-sm text-blue-600 hover:text-blue-500"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className="text-sm text-red-600 hover:text-red-500"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         {/* footer content */}
       </footer>
     </div>
-  )
+  );
 }

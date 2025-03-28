@@ -56,7 +56,7 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <h1 className="text-2xl font-bold">Fact Cards</h1>
         {facts.length === 0 ? (
-          <div className="text-gray-500">No facts added yet. Add some in the admin panel!</div>
+          <div className="text-gray-500">No facts added yet. Add some in the facts page!</div>
         ) : (
           facts.map((fact) => (
             <div key={fact.id} className="border-2 border-gray-300 rounded-lg p-6 max-w-[500px] shadow-md relative">
