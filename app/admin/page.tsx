@@ -1,29 +1,36 @@
 'use client'
 import { useState } from 'react'
-import { useFacts } from '../components/FactsContext'
 import { useRouter } from 'next/navigation'
 
 export default function AdminPage() {
   const [claim, setClaim] = useState('')
   const [answer, setAnswer] = useState('')
-  const { addFact } = useFacts()
+  const [loading, setLoading] = useState(false);
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true);
 
-    // Here you would typically send this data to your backend
-    console.log({ claim, answer })
-    
-    // Add the new fact
-    addFact({ claim, answer })
-    
-    // Clear form after submission
-    setClaim('')
-    setAnswer('')
-    
-    // Redirect to the home page
-    router.push('/')
+    try {
+      // Create new fact
+      await fetch('/api/facts', {
+        method: 'POST',
+        body: JSON.stringify({ claim, answer }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      // Clear form after submission
+      setClaim('')
+      setAnswer('')
+      
+      // Redirect to the home page
+      router.push('/')
+    } catch (error) {
+      console.error('Error saving fact:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -82,8 +89,9 @@ export default function AdminPage() {
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+            disabled={loading}
           >
-            Save Fact Check
+            {loading ? 'Saving...' : 'Save Fact Check'}
           </button>
         </form>
       </main>

@@ -1,21 +1,67 @@
 'use client'
 
-import { useFacts } from './components/FactsContext'
+import { useEffect, useState } from 'react'
+
+type Fact = {
+  id: number;
+  claim: string;
+  answer: string;
+  createdAt: string;
+};
 
 export default function Home() {
-  const { facts, deleteFact } = useFacts()
+  const [facts, setFacts] = useState<Fact[]>([]);
+  const [loading, setLoading] = useState(true);
 
-   return (
+  useEffect(() => {
+    fetchFacts();
+  }, []);
+
+  async function fetchFacts() {
+    try {
+      const res = await fetch('/api/facts');
+      const data = await res.json();
+      setFacts(data);
+    } catch (error) {
+      console.error('Error fetching facts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(id: number) {
+    try {
+      await fetch(`/api/facts/${id}`, {
+        method: 'DELETE',
+      });
+      await fetchFacts(); // Refresh the list after deletion
+    } catch (error) {
+      console.error('Error deleting fact:', error);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+        <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+          <h1 className="text-2xl font-bold">Fact Cards</h1>
+          <div className="text-gray-500">Loading facts...</div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <h1 className="text-2xl font-bold">Fact Cards</h1>
         {facts.length === 0 ? (
           <div className="text-gray-500">No facts added yet. Add some in the admin panel!</div>
         ) : (
-          facts.map((fact, index) => (
-            <div key={index} className="border-2 border-gray-300 rounded-lg p-6 max-w-[500px] shadow-md relative">
+          facts.map((fact) => (
+            <div key={fact.id} className="border-2 border-gray-300 rounded-lg p-6 max-w-[500px] shadow-md relative">
               <button 
-                onClick={() => deleteFact(fact.id)} 
+                onClick={() => handleDelete(fact.id)} 
                 className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2"
                 aria-label="Delete fact"
               >
@@ -31,6 +77,9 @@ export default function Home() {
                 <h2 className="font-bold text-lg">Answer:</h2>
                 <p className="mt-2">{fact.answer}</p>
               </div>
+              <small className="text-gray-500 mt-4 block">
+                Created on {new Date(fact.createdAt).toLocaleString()}
+              </small>
             </div>
           ))
         )}
