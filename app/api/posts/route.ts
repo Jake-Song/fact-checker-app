@@ -52,12 +52,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { title, content } = await request.json();
+    const { title, content, status } = await request.json();
 
     const post = await prisma.post.create({
       data: {
         title,
         content,
+        status: status || 'draft',
         authorId: userId,
       },
     });

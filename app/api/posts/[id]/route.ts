@@ -34,7 +34,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { title, content } = await request.json();
+    const updates = await request.json();
     const postId = parseInt(params.id);
 
     // Check if post belongs to user
@@ -48,7 +48,11 @@ export async function PUT(
 
     const post = await prisma.post.update({
       where: { id: postId },
-      data: { title, content },
+      data: {
+        title: updates.title ?? existingPost.title,
+        content: updates.content ?? existingPost.content,
+        status: updates.status ?? existingPost.status,
+      },
     });
 
     return NextResponse.json(post);
