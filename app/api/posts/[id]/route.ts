@@ -35,11 +35,11 @@ export async function PUT(
     }
 
     const updates = await request.json();
-    const postId = parseInt(params.id);
+    const { id } = await params;
 
     // Check if post belongs to user
     const existingPost = await prisma.post.findUnique({
-      where: { id: postId },
+      where: { id: Number(id) },
     });
 
     if (!existingPost || existingPost.authorId !== userId) {
@@ -47,7 +47,7 @@ export async function PUT(
     }
 
     const post = await prisma.post.update({
-      where: { id: postId },
+      where: { id: Number(id) },
       data: {
         title: updates.title ?? existingPost.title,
         content: updates.content ?? existingPost.content,
@@ -79,11 +79,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const postId = parseInt(params.id);
+    const { id } = await params;
 
     // Check if post belongs to user
     const existingPost = await prisma.post.findUnique({
-      where: { id: postId },
+      where: { id: Number(id) },
     });
 
     if (!existingPost || existingPost.authorId !== userId) {
@@ -91,7 +91,7 @@ export async function DELETE(
     }
 
     await prisma.post.delete({
-      where: { id: postId },
+      where: { id: Number(id) },
     });
 
     return NextResponse.json({ message: 'Post deleted successfully' });
