@@ -1,17 +1,3 @@
-/*
-  Warnings:
-
-  - Added the required column `authorId` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `Post` table without a default value. This is not possible if the table is not empty.
-  - Made the column `content` on table `Post` required. This step will fail if there are existing NULL values in that column.
-
-*/
--- AlterTable
-ALTER TABLE "Post" ADD COLUMN     "authorId" INTEGER NOT NULL,
-ADD COLUMN     "status" TEXT NOT NULL DEFAULT 'draft',
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "content" SET NOT NULL;
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -21,6 +7,19 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Post" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'draft',
+    "authorId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
