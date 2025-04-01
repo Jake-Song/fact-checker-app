@@ -126,7 +126,7 @@ export default function Home() {
           <div className="text-gray-500">No facts added yet. Add some in the facts page!</div>
         ) : (
           facts.map((fact) => (
-            <div key={fact.id} className="border-2 border-gray-300 rounded-lg p-6 max-w-[500px] shadow-md relative">
+            <div key={fact.id} className="border-1 border-gray-300 rounded-lg p-6 max-w-[500px] shadow-md relative">
               <button 
                 onClick={() => handleDelete(fact.id)} 
                 className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2"
