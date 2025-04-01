@@ -12,6 +12,7 @@ model User {
   email     String   @unique
   password  String
   posts     Post[]
+  votes     Vote[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -30,6 +31,19 @@ model Post {
 model Fact {
   id        Int      @id @default(autoincrement())
   claim     String
-  answer   String
+  answer    String
   createdAt DateTime @default(now())
+  votes     Vote[]
+}
+
+model Vote {
+  id        Int      @id @default(autoincrement())
+  factId    Int
+  userId    Int
+  rating    String   // "helpful", "somewhat_helpful", "not_helpful"
+  createdAt DateTime @default(now())
+  fact      Fact     @relation(fields: [factId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([factId, userId])
 }

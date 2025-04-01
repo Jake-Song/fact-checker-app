@@ -7,11 +7,20 @@ type Fact = {
   claim: string;
   answer: string;
   createdAt: string;
+  votes?: {
+    rating: string;
+  }[];
+  voteCounts: {
+    helpful: number;
+    somewhat_helpful: number;
+    not_helpful: number;
+  };
 };
 
 export default function Home() {
   const [facts, setFacts] = useState<Fact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userVotes, setUserVotes] = useState<Record<number, string>>({});
 
   useEffect(() => {
     fetchFacts();
@@ -19,9 +28,27 @@ export default function Home() {
 
   async function fetchFacts() {
     try {
-      const res = await fetch('/api/facts');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/facts', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       setFacts(data);
+      
+      // Fetch user's votes for each fact
+      if (token) {
+        const votes: Record<number, string> = {};
+        for (const fact of data) {
+          const voteRes = await fetch(`/api/facts/${fact.id}/vote`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const voteData = await voteRes.json();
+          if (voteData?.rating) {
+            votes[fact.id] = voteData.rating;
+          }
+        }
+        setUserVotes(votes);
+      }
     } catch (error) {
       console.error('Error fetching facts:', error);
     } finally {
@@ -37,6 +64,42 @@ export default function Home() {
       await fetchFacts(); // Refresh the list after deletion
     } catch (error) {
       console.error('Error deleting fact:', error);
+    }
+  }
+
+  async function handleVote(factId: number, rating: string) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // Redirect to login if not authenticated
+        window.location.href = '/auth';
+        return;
+      }
+
+      const res = await fetch(`/api/facts/${factId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Update local state with new vote and vote counts
+        setUserVotes(prev => ({
+          ...prev,
+          [factId]: rating,
+        }));
+        setFacts(prev => prev.map(fact => 
+          fact.id === factId 
+            ? { ...fact, voteCounts: data.voteCounts }
+            : fact
+        ));
+      }
+    } catch (error) {
+      console.error('Error voting:', error);
     }
   }
 
@@ -84,6 +147,42 @@ export default function Home() {
               <small className="text-gray-500 mt-4 block">
                 Created on {new Date(fact.createdAt).toLocaleString()}
               </small>
+              
+              {/* Voting buttons */}
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleVote(fact.id, 'helpful')}
+                    className='px-3 py-1 rounded-md text-sm flex items-center gap-2 bg-green-500 text-white'
+                  >
+                    Helpful
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                      {fact.voteCounts.helpful}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleVote(fact.id, 'somewhat_helpful')}
+                    className='px-3 py-1 rounded-md text-sm flex items-center gap-2 bg-yellow-500 text-white'
+                  >
+                    Somewhat Helpful
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                      {fact.voteCounts.somewhat_helpful}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleVote(fact.id, 'not_helpful')}
+                    className='px-3 py-1 rounded-md text-sm flex items-center gap-2 bg-red-500 text-white'
+                  >
+                    Not Helpful
+                    <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                      {fact.voteCounts.not_helpful}
+                    </span>
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Total votes: {fact.voteCounts.helpful + fact.voteCounts.somewhat_helpful + fact.voteCounts.not_helpful}
+                </div>
+              </div>
             </div>
           ))
         )}
