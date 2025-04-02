@@ -15,7 +15,8 @@ function verifyToken(token: string) {
 }
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-  const post = await prisma.post.findUnique({ where: { id: Number(params.id) } });
+  const { id } = await params;
+  const post = await prisma.post.findUnique({ where: { id: Number(id) } });
   return Response.json(post);
 }
 

@@ -18,11 +18,12 @@ export default function PostPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetchPost();
-  }, [params.id]);
+  }, [params]);
 
   async function fetchPost() {
     try {
-      const res = await fetch(`/api/posts/${params.id}`);
+      const { id } = await params;
+      const res = await fetch(`/api/posts/${id}`);
       if (!res.ok) {
         throw new Error('Post not found');
       }
