@@ -117,7 +117,7 @@ export default function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <h1 className="text-2xl font-bold">Fact Cards</h1>
+        <h1 className="text-2xl font-bold">Claims</h1>
         {facts.length === 0 ? (
           <div className="text-gray-500">No facts added yet. Add some in the facts page!</div>
         ) : (
@@ -142,7 +142,6 @@ export default function Home() {
                     </svg>
                   </button>
                   <div className="mb-4">
-                    <h2 className="font-bold text-lg">Claim:</h2>
                     <p className="mt-2">{fact.claim}</p>
                   </div>
                 </div>

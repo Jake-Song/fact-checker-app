@@ -61,13 +61,13 @@ export default function PostPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[20px_1fr_20px] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start max-w-[800px] w-full">
         <div className="w-full">
           <Link href="/blog" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
             ← Back to Blog
           </Link>
-          <article className="border-2 border-gray-300 rounded-lg p-6 shadow-md">
+          <article className="p-6">
             <h1 className="text-3xl font-bold mb-6">{post.title}</h1>
             <div className="prose max-w-none">
               <p className="whitespace-pre-wrap">{post.content}</p>

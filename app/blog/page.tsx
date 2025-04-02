@@ -11,6 +11,11 @@ type Post = {
   authorId: number;
 };
 
+const createExcerpt = (text: string, maxLength: number = 200) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
 export default function BlogPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,18 +48,18 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+    <div className="grid grid-rows-[20px_1fr_20px] min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col gap-[32px] row-start-2 sm:items-start mt-16 ml-16">
         {posts.length === 0 ? (
           <div className="text-gray-500">No blog posts yet. Create your first post!</div>
         ) : (
           posts.map((post) => (
-            <div key={post.id} className="border-2 border-gray-300 rounded-lg p-6 max-w-[800px] shadow-md relative">
-              <div className="mb-4">
+            <div key={post.id} className="p-6 w-full relative border-b border-gray-200">
+              <div className="mt-4 mb-4">
                 <Link href={`/blog/${post.id}`} className="hover:text-blue-600">
-                  <h2 className="font-bold text-xl">{post.title}</h2>
+                  <h2 className="font-bold text-5xl">{post.title}</h2>
                 </Link>
-                <p className="mt-4 whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                <p className="mt-8 whitespace-pre-wrap line-clamp-3 text-gray-600">{createExcerpt(post.content)}</p>
               </div>
               <small className="text-gray-500 mt-4 block">
                 Posted on {new Date(post.createdAt).toLocaleString()}
