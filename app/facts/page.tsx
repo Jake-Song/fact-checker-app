@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 export default function FactsPage() {
   const [claim, setClaim] = useState('')
   const [answer, setAnswer] = useState('')
+  const [tag, setTag] = useState('')
   const [loading, setLoading] = useState(false);
   const router = useRouter()
 
@@ -26,7 +27,7 @@ export default function FactsPage() {
       // Create new fact with authentication
       await fetch('/api/facts', {
         method: 'POST',
-        body: JSON.stringify({ claim, answer }),
+        body: JSON.stringify({ claim, answer, tag }),
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -36,6 +37,7 @@ export default function FactsPage() {
       // Clear form after submission
       setClaim('')
       setAnswer('')
+      setTag('')
       
       // Redirect to the home page
       router.push('/')
@@ -99,6 +101,21 @@ export default function FactsPage() {
             />
           </div>
 
+          {/* Tag Input */}
+          <div className="space-y-2">
+            <label htmlFor="tag" className="block font-semibold">
+              Tag
+            </label>
+            <input
+              type="text"
+              id="tag"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              placeholder="Enter a tag for this fact check..."
+            />
+          </div>
+
           {/* Preview Card */}
           <div className="mt-8">
             <h2 className="text-lg font-bold mb-4">Preview</h2>
@@ -107,9 +124,13 @@ export default function FactsPage() {
                 <h2 className="font-bold text-lg">Claim:</h2>
                 <p className="mt-2">{claim || 'Your claim will appear here'}</p>
               </div>
-              <div>
+              <div className="mb-4">
                 <h2 className="font-bold text-lg">Answer:</h2>
                 <p className="mt-2">{answer || 'Your answer will appear here'}</p>
+              </div>
+              <div>
+                <h2 className="font-bold text-lg">Tag:</h2>
+                <p className="mt-2">{tag || 'Your tag will appear here'}</p>
               </div>
             </div>
           </div>
