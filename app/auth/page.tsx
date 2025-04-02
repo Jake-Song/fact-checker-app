@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
@@ -10,6 +10,13 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if(token) {
+      router.push('/');
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,8 +43,8 @@ export default function AuthPage() {
         localStorage.setItem('user', JSON.stringify({ id: data.userId, email: data.email }));
       }
 
-      // Redirect to blog page
-      router.push('/admin');
+      // Redirect to home page
+      router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

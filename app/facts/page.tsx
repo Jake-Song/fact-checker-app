@@ -57,16 +57,6 @@ export default function FactsPage() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-[800px]">
         <div className="w-full flex justify-between items-center">
           <h1 className="text-2xl font-bold">Create New Fact Check</h1>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token');
-              localStorage.removeItem('user');
-              router.push('/auth');
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Logout
-          </button>
         </div>
         
         {/* Writing Interface */}

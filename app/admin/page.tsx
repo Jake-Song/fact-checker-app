@@ -111,24 +111,12 @@ export default function AdminPage() {
     setContent(post.content);
   }
 
-  function handleLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/auth');
-  }
-
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-[800px]">
         <div className="w-full">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold">Blog</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Logout
-            </button>
           </div>
 
           <div className="border-2 border-gray-300 rounded-lg p-6 shadow-md mb-8">
