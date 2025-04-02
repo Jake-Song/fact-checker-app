@@ -29,12 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex flex-col items-center mb-8 absolute left-1/2 transform -translate-x-1/2 top-16 flex gap-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 text-transparent bg-clip-text">
-            Fact Checker
-          </h1>
-        </div>
-        <Navigation />
+       <Navigation />
         {children}
       </body>
     </html>
