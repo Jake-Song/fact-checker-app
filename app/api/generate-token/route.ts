@@ -12,9 +12,7 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.split(' ')[1];
-    console.log('token', token);
     const decodedUser = await verifyAuth(token);
-    console.log('decodedUser', decodedUser);
     if (!decodedUser || !decodedUser.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

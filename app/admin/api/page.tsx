@@ -28,14 +28,12 @@ function SideMenu() {
         <ul className="space-y-2">
           <li>
             <Link href="/admin" className="flex items-center p-2 hover:bg-gray-700 rounded">
-              <span className="material-icons mr-2">article</span>
-              Blog
+              blog
             </Link>
           </li>
           <li>
             <Link href="/admin/api" className="flex items-center p-2 hover:bg-gray-700 rounded">
-              <span className="material-icons mr-2">api</span>
-              API
+              api
             </Link>
           </li>
         </ul>
@@ -52,6 +50,7 @@ export default function ApiPage() {
   const [error, setError] = useState<string>('');
   const [showToken, setShowToken] = useState(false);
   const [deletingTokenId, setDeletingTokenId] = useState<number | null>(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -62,6 +61,16 @@ export default function ApiPage() {
     }
     fetchStoredTokens();
   }, [router]);
+
+  // Add useEffect for the copy notification
+  useEffect(() => {
+    if (showCopyNotification) {
+      const timer = setTimeout(() => {
+        setShowCopyNotification(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showCopyNotification]);
 
   const fetchStoredTokens = async () => {
     try {
@@ -143,6 +152,7 @@ export default function ApiPage() {
   const copyToClipboard = () => {
     if (tokenInfo) {
       navigator.clipboard.writeText(tokenInfo.token);
+      setShowCopyNotification(true);
     }
   };
 
@@ -151,6 +161,9 @@ export default function ApiPage() {
   };
 
   const getMaskedToken = (token: string) => {
+    if (showToken) {
+      return token;
+    }
     const firstFour = token.substring(0, 4);
     const lastFour = token.substring(token.length - 4);
     const maskedLength = token.length - 8;
@@ -175,6 +188,11 @@ export default function ApiPage() {
       <SideMenu />
       <div className="flex-1 p-8">
         <main className="max-w-[800px] mx-auto">
+          {showCopyNotification && (
+            <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50">
+              Token copied to clipboard!
+            </div>
+          )}
           <div className="w-full">
             <div className="space-y-6">
               <div className="border-2 border-gray-300 rounded-lg p-6 shadow-md">
@@ -195,13 +213,13 @@ export default function ApiPage() {
                       <>
                         <button
                           onClick={copyToClipboard}
-                          className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          className="border border-gray-300 px-4 py-2 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                         >
                           Copy Token
                         </button>
                         <button
                           onClick={toggleTokenVisibility}
-                          className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                          className="border border-gray-300 px-4 py-2 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                         >
                           {showToken ? 'Hide Token' : 'Show Token'}
                         </button>
@@ -249,27 +267,13 @@ export default function ApiPage() {
                           {storedTokens.map((token) => (
                             <tr key={token.id}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                                {getMaskedToken(token.token)}
+                                {token.token}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(token.createdAt)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(token.expiresAt)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(token.lastUsed)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <div className="flex gap-2">
-                                  <button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(token.token);
-                                      const button = document.activeElement as HTMLButtonElement;
-                                      const originalText = button.textContent;
-                                      button.textContent = 'Copied!';
-                                      setTimeout(() => {
-                                        button.textContent = originalText;
-                                      }, 2000);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-800 focus:outline-none"
-                                  >
-                                    Copy
-                                  </button>
                                   <button
                                     onClick={() => deleteToken(token.id)}
                                     disabled={deletingTokenId === token.id}

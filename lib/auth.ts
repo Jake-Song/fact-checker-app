@@ -6,10 +6,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 export async function verifyAuth(token: string) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    console.log('decoded', decoded);
     // Verify the user exists in the database
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded.id },
     });
 
     if (!user) {
