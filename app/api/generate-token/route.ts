@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from "@/lib/auth";
 import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -11,20 +12,30 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.split(' ')[1];
-    const user = await verifyAuth(token);
-    
-    if (!user) {
+    console.log('token', token);
+    const decodedUser = await verifyAuth(token);
+    console.log('decodedUser', decodedUser);
+    if (!decodedUser || !decodedUser.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Generate a secure random token
     const apiToken = crypto.randomBytes(32).toString('hex');
 
-    // TODO: Store the API token in your database associated with the user
-    // This is where you would save the token to your database
-    // For now, we'll just return it
+    // Store the token in the database
+    const storedToken = await prisma.apiToken.create({
+      data: {
+        token: apiToken,
+        userId: decodedUser.id,
+        // Set expiration to 1 year from now
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      },
+    });
 
-    return NextResponse.json({ token: apiToken });
+    return NextResponse.json({ 
+      token: apiToken,
+      expiresAt: storedToken.expiresAt,
+    });
   } catch (error) {
     console.error('Error generating API token:', error);
     return NextResponse.json(
