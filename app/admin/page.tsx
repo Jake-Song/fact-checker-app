@@ -22,14 +22,12 @@ function SideMenu() {
         <ul className="space-y-2">
           <li>
             <Link href="/admin" className="flex items-center p-2 hover:bg-gray-700 rounded">
-              <span className="material-icons mr-2">article</span>
-              Blog
+              blog
             </Link>
           </li>
           <li>
             <Link href="/admin/api" className="flex items-center p-2 hover:bg-gray-700 rounded">
-              <span className="material-icons mr-2">api</span>
-              API
+              api
             </Link>
           </li>
         </ul>
