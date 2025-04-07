@@ -15,6 +15,7 @@ function verifyToken(token: string) {
     const decoded = verify(token, JWT_SECRET) as { userId: number };
     return decoded.userId;
   } catch (error) {
+    console.error('Error verifying token:', error);
     return null;
   }
 }
@@ -49,8 +50,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(factsWithFilteredVotes);
   } catch (error) {
+    console.error('Error fetching facts:', error);
     return NextResponse.json(
-      { error: 'Error fetching facts' },
+      { error: 'Failed to fetch facts' },
       { status: 500 }
     );
   }
@@ -79,8 +81,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(fact, { status: 201 });
   } catch (error) {
+    console.error('Error creating fact:', error);
     return NextResponse.json(
-      { error: 'Error creating fact' },
+      { error: 'Failed to create fact' },
       { status: 500 }
     );
   }

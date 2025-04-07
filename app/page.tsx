@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation';
 
 type Fact = {
   id: number;
@@ -16,38 +17,32 @@ type Fact = {
     somewhat_helpful: number;
     not_helpful: number;
   };
+  userVote?: string;
 };
 
 export default function Home() {
   const [facts, setFacts] = useState<Fact[]>([]);
   const [loading, setLoading] = useState(true);
   const [userVotes, setUserVotes] = useState<Record<number, string>>({});
+  const router = useRouter();
 
-  useEffect(() => {
-    fetchFacts();
-  }, []);
-
-  async function fetchFacts() {
+  const fetchFacts = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/facts', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
-      setFacts(data);
-      
-      // Fetch user's votes for each fact
-      if (token) {
+      if (res.ok) {
+        const data = await res.json();
+        setFacts(data);
+        
+        // Extract user votes from the response
         const votes: Record<number, string> = {};
-        for (const fact of data) {
-          const voteRes = await fetch(`/api/facts/${fact.id}/vote`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const voteData = await voteRes.json();
-          if (voteData?.rating) {
-            votes[fact.id] = voteData.rating;
+        data.forEach((fact: Fact) => {
+          if (fact.userVote) {
+            votes[fact.id] = fact.userVote;
           }
-        }
+        });
         setUserVotes(votes);
       }
     } catch (error) {
@@ -55,7 +50,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchFacts();
+  }, [fetchFacts]);
 
   async function handleDelete(id: number) {
     try {
@@ -65,42 +64,6 @@ export default function Home() {
       await fetchFacts(); // Refresh the list after deletion
     } catch (error) {
       console.error('Error deleting fact:', error);
-    }
-  }
-
-  async function handleVote(factId: number, rating: string) {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        // Redirect to login if not authenticated
-        window.location.href = '/auth';
-        return;
-      }
-
-      const res = await fetch(`/api/facts/${factId}/vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ rating }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        // Update local state with new vote and vote counts
-        setUserVotes(prev => ({
-          ...prev,
-          [factId]: rating,
-        }));
-        setFacts(prev => prev.map(fact => 
-          fact.id === factId 
-            ? { ...fact, voteCounts: data.voteCounts }
-            : fact
-        ));
-      }
-    } catch (error) {
-      console.error('Error voting:', error);
     }
   }
 

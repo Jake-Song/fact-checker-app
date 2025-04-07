@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -19,17 +19,13 @@ type Fact = {
   };
 };
 
-export default function FactPage({ params }: { params: { id: string } }) {
+export default function FactPage({ params }: { params: Promise<{ id: string }> }) {
   const [fact, setFact] = useState<Fact | null>(null);
   const [loading, setLoading] = useState(true);
   const [userVote, setUserVote] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchFact();
-  }, [params]);
-
-  async function fetchFact() {
+  const fetchFact = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const { id } = await params;
@@ -54,7 +50,11 @@ export default function FactPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [params]);
+
+  useEffect(() => {
+    fetchFact();
+  }, [fetchFact]);
 
   async function handleVote(rating: string) {
     try {

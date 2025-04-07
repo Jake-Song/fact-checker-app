@@ -10,6 +10,7 @@ function verifyToken(token: string) {
     const decoded = verify(token, JWT_SECRET) as { userId: number };
     return decoded.userId;
   } catch (error) {
+    console.error('Error verifying token:', error);
     return null;
   }
 }
@@ -33,8 +34,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(posts);
   } catch (error) {
+    console.error('Error fetching posts:', error);
     return NextResponse.json(
-      { error: 'Error fetching posts' },
+      { error: 'Failed to fetch posts' },
       { status: 500 }
     );
   }
@@ -65,8 +67,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
+    console.error('Error creating post:', error);
     return NextResponse.json(
-      { error: 'Error creating post' },
+      { error: 'Failed to create post' },
       { status: 500 }
     );
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 
 type Post = {
@@ -11,16 +11,12 @@ type Post = {
   authorId: number;
 };
 
-export default function PostPage({ params }: { params: { id: string } }) {
+export default function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPost();
-  }, [params]);
-
-  async function fetchPost() {
+  const fetchPost = useCallback(async () => {
     try {
       const { id } = await params;
       const res = await fetch(`/api/posts/${id}`);
@@ -35,7 +31,11 @@ export default function PostPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [params]);
+
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -44,17 +44,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/auth');
-      return;
-    }
-    fetchPosts();
-  }, [router]);
-
-  async function fetchPosts() {
+  const fetchPosts = useCallback(async () => {
     const token = localStorage.getItem('token');
     const res = await fetch('/api/posts', {
       headers: {
@@ -69,7 +59,17 @@ export default function AdminPage() {
     }
     const data = await res.json();
     setPosts(data);
-  }
+  }, [router]);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/auth');
+      return;
+    }
+    fetchPosts();
+  }, [router, fetchPosts]);
 
   async function handleSubmit(e: React.FormEvent, status: 'draft' | 'published') {
     e.preventDefault();

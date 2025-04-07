@@ -10,13 +10,14 @@ function verifyToken(token: string) {
     const decoded = verify(token, JWT_SECRET) as { userId: number };
     return decoded.userId;
   } catch (error) {
+    console.error('Error verifying token:', error);
     return null;
   }
 }
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -85,8 +86,9 @@ export async function POST(
       voteCounts,
     });
   } catch (error) {
+    console.error('Error processing vote:', error);
     return NextResponse.json(
-      { error: 'Error processing vote' },
+      { error: 'Failed to process vote' },
       { status: 500 }
     );
   }
@@ -94,7 +96,7 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -122,8 +124,47 @@ export async function GET(
 
     return NextResponse.json(vote);
   } catch (error) {
+    console.error('Error fetching vote:', error);
     return NextResponse.json(
-      { error: 'Error fetching vote' },
+      { error: 'Failed to fetch vote' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const token = request.headers.get('Authorization')?.split(' ')[1];
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = verifyToken(token);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const factId = Number(id);
+
+    // Remove user's vote for this fact
+    const vote = await prisma.vote.delete({
+      where: {
+        factId_userId: {
+          factId,
+          userId,
+        },
+      },
+    });
+
+    return NextResponse.json(vote);
+  } catch (error) {
+    console.error('Error removing vote:', error);
+    return NextResponse.json(
+      { error: 'Failed to remove vote' },
       { status: 500 }
     );
   }

@@ -13,10 +13,10 @@ export default function AuthPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if(token) {
+    if (token) {
       router.push('/');
     }
-  }, []);
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

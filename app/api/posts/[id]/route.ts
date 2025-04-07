@@ -10,11 +10,12 @@ function verifyToken(token: string) {
     const decoded = verify(token, JWT_SECRET) as { userId: number };
     return decoded.userId;
   } catch (error) {
+    console.error('Error verifying token:', error);
     return null;
   }
 }
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const post = await prisma.post.findUnique({ where: { id: Number(id) } });
   return Response.json(post);
@@ -22,7 +23,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -58,8 +59,9 @@ export async function PUT(
 
     return NextResponse.json(post);
   } catch (error) {
+    console.error('Error updating post:', error);
     return NextResponse.json(
-      { error: 'Error updating post' },
+      { error: 'Failed to update post' },
       { status: 500 }
     );
   }
@@ -67,7 +69,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split(' ')[1];
@@ -97,8 +99,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {
+    console.error('Error deleting post:', error);
     return NextResponse.json(
-      { error: 'Error deleting post' },
+      { error: 'Failed to delete post' },
       { status: 500 }
     );
   }
