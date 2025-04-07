@@ -14,7 +14,7 @@ type Post = {
 
 function SideMenu() {
   return (
-    <div className="w-64 h-screen text-white p-4">
+    <div className="w-64 h-screen text-white p-4 mt-8">
       <div className="mb-8">
         <h2 className="text-xl font-bold">Admin Dashboard</h2>
       </div>
@@ -137,7 +137,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center mt-40">
+    <div className="flex min-h-screen mt-8">
       <SideMenu />
       <div className="flex-1 p-8">
         <main className="max-w-[800px] mx-auto">

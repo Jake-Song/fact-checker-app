@@ -21,8 +21,8 @@ export default function Navigation() {
   }
 
   return (
-    <div className="absolute left-0 top-24 w-full border-b border-gray-100/30 pb-2">
-      <nav className="max-w-7xl mx-auto flex items-end gap-4 px-16">
+    <div className="w-full border-b border-gray-100/30 mt-8 pb-2">
+      <nav className="flex items-end pl-8 gap-6">
         <Link href="/" className="pr-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 text-transparent bg-clip-text">
             Fact Checker
