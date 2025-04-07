@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation';
 
 type Fact = {
   id: number;
@@ -17,15 +16,12 @@ type Fact = {
     somewhat_helpful: number;
     not_helpful: number;
   };
-  userVote?: string;
 };
 
 export default function Home() {
   const [facts, setFacts] = useState<Fact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userVotes, setUserVotes] = useState<Record<number, string>>({});
-  const router = useRouter();
-
+ 
   const fetchFacts = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -35,15 +31,6 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setFacts(data);
-        
-        // Extract user votes from the response
-        const votes: Record<number, string> = {};
-        data.forEach((fact: Fact) => {
-          if (fact.userVote) {
-            votes[fact.id] = fact.userVote;
-          }
-        });
-        setUserVotes(votes);
       }
     } catch (error) {
       console.error('Error fetching facts:', error);
