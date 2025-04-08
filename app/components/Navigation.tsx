@@ -1,23 +1,14 @@
 'use client'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function Navigation() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const router = useRouter()
+  const { data: session, status } = useSession()
   const pathname = usePathname()
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    setIsAuthenticated(!!token)
-  }, [pathname]) // Run when pathname changes
-
   const handleSignOut = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setIsAuthenticated(false)
-    router.push('/')
+    signOut({ callbackUrl: '/' })
   }
 
   return (
@@ -32,7 +23,7 @@ export default function Navigation() {
         <Link href="/blog" className="hover:text-gray-600 transition-colors duration-200">Blog</Link>
         <Link href="/facts" className="hover:text-gray-600 transition-colors duration-200">Facts</Link>
         
-        {isAuthenticated ? (
+        {status === 'authenticated' ? (
           <>
             <Link href="/admin" className="hover:text-gray-600 transition-colors duration-200">Admin</Link>
             <button 
