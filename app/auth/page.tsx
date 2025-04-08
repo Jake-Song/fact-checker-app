@@ -1,28 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 
-export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+// Create a separate component for the error handling logic
+function ErrorHandler() {
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/');
-    }
-  }, [status, router]);
-
-  useEffect(() => {
-    // Check for error in URL
     const errorParam = searchParams.get('error');
     if (errorParam) {
       if (errorParam === 'OAuthAccountNotLinked') {
@@ -51,9 +38,26 @@ export default function AuthPage() {
     }
   }, [searchParams]);
 
+  return error ? <div className="text-red-500 text-sm mt-2">{error}</div> : null;
+}
+
+export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -65,9 +69,7 @@ export default function AuthPage() {
           password,
         });
 
-        if (result?.error) {
-          setError(result.error);
-        } else {
+        if (!result?.error) {
           router.push('/');
         }
       } else {
@@ -91,14 +93,12 @@ export default function AuthPage() {
           password,
         });
 
-        if (result?.error) {
-          setError(result.error);
-        } else {
+        if (!result?.error) {
           router.push('/');
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -198,9 +198,10 @@ export default function AuthPage() {
                 />
               </div>
 
-              {error && (
-                <div className="text-red-500 text-sm text-center p-2 bg-red-50 rounded-md">{error}</div>
-              )}
+              {/* Wrap the error handler in Suspense */}
+              <Suspense fallback={<div>Loading...</div>}>
+                <ErrorHandler />
+              </Suspense>
 
               <button
                 type="submit"

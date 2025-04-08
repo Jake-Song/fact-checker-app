@@ -1,23 +1,93 @@
-import jwt from 'jsonwebtoken';
-import { prisma } from './prisma';
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { JWT } from "next-auth/jwt";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
-export async function verifyAuth(token: string) {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
-    // Verify the user exists in the database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
 
-    if (!user) {
-      return null;
+        if (!user || !user.password) {
+          return null;
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      }
+    })
+  ],
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      if (account?.provider === "google") {
+        return true;
+      }
+      
+      if (account?.provider === "credentials") {
+        return true;
+      }
+      
+      return true;
+    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+        },
+      };
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
     }
-
-    return { id: user.id };
-  } catch (error) {
-    console.error('Token verification error:', error);
-    return null;
-  }
-} 
+  },
+  pages: {
+    signIn: '/auth',
+    error: '/auth',
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60,
+  },
+};
