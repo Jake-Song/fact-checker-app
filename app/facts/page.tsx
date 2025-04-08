@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 export default function FactsPage() {
   const [claim, setClaim] = useState('')
@@ -8,31 +9,37 @@ export default function FactsPage() {
   const [tag, setTag] = useState('')
   const [loading, setLoading] = useState(false);
   const router = useRouter()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (status === 'unauthenticated') {
       router.push('/auth');
       return;
     }
-  }, [router]);
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       // Create new fact with authentication
-      await fetch('/api/facts', {
+      const response = await fetch('/api/facts', {
         method: 'POST',
         body: JSON.stringify({ claim, answer, tag }),
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
       });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/auth');
+          return;
+        }
+        throw new Error('Failed to save fact');
+      }
       
       // Clear form after submission
       setClaim('')
@@ -43,10 +50,6 @@ export default function FactsPage() {
       router.push('/')
     } catch (error) {
       console.error('Error saving fact:', error);
-      if (error instanceof Error && error.message.includes('401')) {
-        // If unauthorized, redirect to login
-        router.push('/auth');
-      }
     } finally {
       setLoading(false);
     }

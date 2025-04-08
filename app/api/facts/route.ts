@@ -1,29 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 type FactWithVotes = Prisma.FactGetPayload<{
   include: { votes: true }
 }>;
 
-// Helper function to verify JWT token
-function verifyToken(token: string) {
-  try {
-    const decoded = verify(token, JWT_SECRET) as { userId: number };
-    return decoded.userId;
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    return null;
-  }
-}
-
 export async function GET(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    const userId = token ? verifyToken(token) : null;
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ? Number(session.user.id) : null;
 
     const facts = await prisma.fact.findMany({
       orderBy: { createdAt: 'desc' },
@@ -60,14 +48,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = verifyToken(token);
+    const userId = Number(session.user.id);
     if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 401 });
     }
 
     const { claim, answer } = await request.json();

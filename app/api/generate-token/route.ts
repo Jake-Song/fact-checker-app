@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
-    // Verify the user is authenticated
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decodedUser = await verifyAuth(token);
-    if (!decodedUser || !decodedUser.id) {
+    // Get the session using NextAuth
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,7 +20,7 @@ export async function POST(request: Request) {
     const storedToken = await prisma.apiToken.create({
       data: {
         token: apiToken,
-        userId: decodedUser.id,
+        userId: Number(session.user.id),
         // Set expiration to 1 year from now
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       },

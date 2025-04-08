@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
@@ -7,18 +8,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify the user is authenticated
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Get the session using NextAuth
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decodedUser = await verifyAuth(token);
-    
-    if (!decodedUser || !decodedUser.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     const { id } = await params;
     const tokenId = Number(id);
     if (isNaN(tokenId)) {
@@ -34,7 +30,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
 
-    if (apiToken.userId !== decodedUser.id) {
+    if (apiToken.userId !== Number(session.user.id)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

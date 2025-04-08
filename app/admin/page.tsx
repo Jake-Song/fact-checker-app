@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 type Post = {
   id: number;
@@ -43,39 +44,34 @@ export default function AdminPage() {
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const fetchPosts = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/posts', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    if (status === 'unauthenticated') {
+      router.push('/auth');
+      return;
+    }
+
+    const res = await fetch('/api/posts');
     if (res.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
       router.push('/auth');
       return;
     }
     const data = await res.json();
     setPosts(data);
-  }, [router]);
+  }, [router, status]);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (status === 'unauthenticated') {
       router.push('/auth');
       return;
     }
     fetchPosts();
-  }, [router, fetchPosts]);
+  }, [router, fetchPosts, status]);
 
   async function handleSubmit(e: React.FormEvent, status: 'draft' | 'published') {
     e.preventDefault();
     setLoading(true);
-
-    const token = localStorage.getItem('token');
 
     if (editingPostId) {
       // Edit mode
@@ -84,7 +80,6 @@ export default function AdminPage() {
         body: JSON.stringify({ title, content, status }),
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
       setEditingPostId(null);
@@ -95,7 +90,6 @@ export default function AdminPage() {
         body: JSON.stringify({ title, content, status }),
         headers: { 
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
     }
@@ -107,24 +101,18 @@ export default function AdminPage() {
   }
 
   async function handleDelete(id: number) {
-    const token = localStorage.getItem('token');
     await fetch(`/api/posts/${id}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
     await fetchPosts();
   }
 
   async function handlePublish(id: number) {
-    const token = localStorage.getItem('token');
     await fetch(`/api/posts/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ status: 'published' }),
       headers: { 
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
     });
     await fetchPosts();
@@ -134,6 +122,10 @@ export default function AdminPage() {
     setEditingPostId(post.id);
     setTitle(post.title);
     setContent(post.content);
+  }
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
   }
 
   return (

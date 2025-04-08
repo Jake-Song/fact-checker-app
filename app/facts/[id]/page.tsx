@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 type Fact = {
   id: number;
@@ -24,22 +25,18 @@ export default function FactPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true);
   const [userVote, setUserVote] = useState<string | null>(null);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const fetchFact = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
       const { id } = await params;
-      const res = await fetch(`/api/facts/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await fetch(`/api/facts/${id}`);
       const data = await res.json();
       setFact(data);
      
       // Fetch user's vote if authenticated
-      if (token) {
-        const voteRes = await fetch(`/api/facts/${id}/vote`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      if (status === 'authenticated') {
+        const voteRes = await fetch(`/api/facts/${id}/vote`);
         const voteData = await voteRes.json();
         if (voteData?.rating) {
           setUserVote(voteData.rating);
@@ -50,7 +47,7 @@ export default function FactPage({ params }: { params: Promise<{ id: string }> }
     } finally {
       setLoading(false);
     }
-  }, [params]);
+  }, [params, status]);
 
   useEffect(() => {
     fetchFact();
@@ -58,17 +55,16 @@ export default function FactPage({ params }: { params: Promise<{ id: string }> }
 
   async function handleVote(rating: string) {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      if (status !== 'authenticated') {
         router.push('/auth');
         return;
       }
+
       const { id } = await params;
       const res = await fetch(`/api/facts/${id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ rating }),
       });

@@ -1,29 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Prisma } from '@prisma/client';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 type FactWithVotes = Prisma.FactGetPayload<{
   include: { votes: true }
 }>;
 
-// Helper function to verify JWT token
-function verifyToken(token: string) {
-  try {
-    const decoded = verify(token, JWT_SECRET) as { userId: number };
-    return decoded.userId;
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    return null;
-  }
-}
-
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    const userId = token ? verifyToken(token) : null;
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ? Number(session.user.id) : null;
 
     const { id } = await params;
     const fact = await prisma.fact.findUnique({ 
@@ -55,17 +43,43 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { claim, answer } = await req.json();
-  const { id } = await params;
-  const updated = await prisma.fact.update({
-    where: { id: Number(id) },
-    data: { claim, answer },
-  });
-  return Response.json(updated);
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { claim, answer } = await req.json();
+    const { id } = await params;
+    const updated = await prisma.fact.update({
+      where: { id: Number(id) },
+      data: { claim, answer },
+    });
+    return Response.json(updated);
+  } catch (error) {
+    console.error('Error updating fact:', error);
+    return NextResponse.json(
+      { error: 'Failed to update fact' },
+      { status: 500 }
+    );
+  }
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  await prisma.fact.delete({ where: { id: Number(id) } });
-  return new Response(null, { status: 204 });
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    await prisma.fact.delete({ where: { id: Number(id) } });
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    console.error('Error deleting fact:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete fact' },
+      { status: 500 }
+    );
+  }
 }

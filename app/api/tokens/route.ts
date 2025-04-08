@@ -1,26 +1,21 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
   try {
-    // Verify the user is authenticated
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decodedUser = await verifyAuth(token);
+    // Get the session using NextAuth
+    const session = await getServerSession(authOptions);
     
-    if (!decodedUser || !decodedUser.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Retrieve all active tokens for the user
     const tokens = await prisma.apiToken.findMany({
       where: {
-        userId: decodedUser.id,
+        userId: Number(session.user.id),
         isRevoked: false,
         OR: [
           { expiresAt: null },

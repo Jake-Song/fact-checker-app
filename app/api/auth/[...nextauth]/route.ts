@@ -1,12 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions, Session, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { JWT } from "next-auth/jwt";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -63,17 +65,17 @@ const handler = NextAuth({
       
       return true;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       // Add the user ID to the session
       return {
         ...session,
         user: {
           ...session.user,
-          id: token.id,
+          id: token.id as string,
         },
       };
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.id = user.id;
       }
@@ -85,8 +87,14 @@ const handler = NextAuth({
     error: '/auth', // Redirect to auth page on error
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-});
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST }; 

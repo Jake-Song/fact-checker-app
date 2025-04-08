@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 type ApiTokenInfo = {
   token: string;
@@ -44,6 +45,7 @@ function SideMenu() {
 
 export default function ApiPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [tokenInfo, setTokenInfo] = useState<ApiTokenInfo | null>(null);
   const [storedTokens, setStoredTokens] = useState<StoredToken[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,14 +55,12 @@ export default function ApiPage() {
   const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (status === 'unauthenticated') {
       router.push('/auth');
       return;
     }
     fetchStoredTokens();
-  }, [router]);
+  }, [router, status]);
 
   // Add useEffect for the copy notification
   useEffect(() => {
@@ -74,12 +74,7 @@ export default function ApiPage() {
 
   const fetchStoredTokens = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/tokens', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch('/api/tokens');
 
       if (!response.ok) {
         throw new Error('Failed to fetch tokens');
@@ -96,11 +91,9 @@ export default function ApiPage() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/generate-token', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -127,12 +120,8 @@ export default function ApiPage() {
 
     setDeletingTokenId(tokenId);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/tokens/${tokenId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       if (!response.ok) {
@@ -182,6 +171,10 @@ export default function ApiPage() {
       minute: '2-digit',
     });
   };
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="flex min-h-screen mt-40">

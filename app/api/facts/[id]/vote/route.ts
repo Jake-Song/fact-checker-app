@@ -1,35 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verify } from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Helper function to verify JWT token
-function verifyToken(token: string) {
-  try {
-    const decoded = verify(token, JWT_SECRET) as { userId: number };
-    return decoded.userId;
-  } catch (error) {
-    console.error('Error verifying token:', error);
-    return null;
-  }
-}
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = verifyToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
+    const userId = Number(session.user.id);
     const { rating } = await request.json();
     const { id } = await params;
     const factId = Number(id);
@@ -99,16 +83,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = verifyToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
+    const userId = Number(session.user.id);
     const { id } = await params;
     const factId = Number(id);
 
@@ -137,16 +117,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
-    if (!token) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = verifyToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
+    const userId = Number(session.user.id);
     const { id } = await params;
     const factId = Number(id);
 
