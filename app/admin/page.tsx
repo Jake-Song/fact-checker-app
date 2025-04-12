@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 type Post = {
   id: number;
@@ -156,14 +159,14 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                    Post Content
+                    Post Content (Supports Markdown)
                   </label>
                   <textarea
                     id="content"
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[150px]"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="Enter post content"
+                    placeholder="Enter post content. Use Markdown for formatting:&#10;- [link text](url) for links&#10;- ![alt text](image_url) for images&#10;- **bold text** for emphasis&#10;- *italic text* for italics&#10;- # Heading for headers"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -198,6 +201,48 @@ export default function AdminPage() {
                   )}
                 </div>
               </form>
+            </div>
+           
+            {/* Preview Section */}
+            <div className="border-2 border-gray-300 rounded-lg p-6 shadow-md mb-8">
+              <h2 className="text-xl font-semibold mb-4">Preview</h2>
+              <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-bold prose-a:text-blue-600">
+                <ReactMarkdown
+                  components={{
+                    // Override default heading components to ensure proper styling
+                    h1: ({node, ...props}) => <h1 className="text-4xl font-bold mb-4" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-3xl font-bold mb-3" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-2xl font-bold mb-2" {...props} />,
+                    h4: ({node, ...props}) => <h4 className="text-xl font-bold mb-2" {...props} />,
+                    // Override list components
+                    ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props} />,
+                    li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                    // Override paragraph component
+                    p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                    // Keep the existing code component
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || '')
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          style={vscDarkPlus as any}
+                          language={match[1]}
+                          PreTag="div"
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded" {...props}>
+                          {children}
+                        </code>
+                      )
+                    }
+                  }}
+                >
+                  {content || '*No content to preview*'}
+                </ReactMarkdown>
+              </div>
             </div>
 
             <div className="space-y-6">

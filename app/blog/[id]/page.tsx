@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 type Post = {
   id: number;
@@ -69,8 +72,30 @@ export default function PostPage({ params }: { params: Promise<{ id: string }> }
           </Link>
           <article className="p-6">
             <h1 className="text-3xl font-bold mb-6">{post.title}</h1>
-            <div className="prose max-w-none">
-              <p className="whitespace-pre-wrap">{post.content}</p>
+            <div className="prose prose-lg max-w-none dark:prose-invert">
+              <ReactMarkdown
+                components={{
+                  code({ node, inline, className, children, ...props }: any) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={vscDarkPlus as any}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    )
+                  }
+                }}
+              >
+                {post.content}
+              </ReactMarkdown>
             </div>
             <div className="mt-8 pt-4 border-t border-gray-200">
               <small className="text-gray-500">
