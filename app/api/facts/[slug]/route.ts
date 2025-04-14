@@ -8,14 +8,14 @@ type FactWithVotes = Prisma.FactGetPayload<{
   include: { votes: true }
 }>;
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id ? Number(session.user.id) : null;
 
-    const { id } = await params;
+    const { slug } = await params;
     const fact = await prisma.fact.findUnique({ 
-      where: { id: Number(id) }, 
+      where: { slug }, 
       include: {
         votes: true,
       },
@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -50,10 +50,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { claim, answer } = await req.json();
-    const { id } = await params;
+    const { slug } = await params;
+    
+    // Generate new slug if claim is being updated
+    let newSlug = slug;
+    if (claim) {
+      newSlug = claim
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    }
+    
     const updated = await prisma.fact.update({
-      where: { id: Number(id) },
-      data: { claim, answer },
+      where: { slug },
+      data: { 
+        claim, 
+        answer,
+        slug: newSlug,
+      },
     });
     return Response.json(updated);
   } catch (error) {
@@ -65,15 +79,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
-    await prisma.fact.delete({ where: { id: Number(id) } });
+    const { slug } = await params;
+    await prisma.fact.delete({ where: { slug } });
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error('Error deleting fact:', error);

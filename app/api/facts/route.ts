@@ -59,11 +59,18 @@ export async function POST(request: Request) {
     }
 
     const { claim, answer } = await request.json();
+    
+    // Generate slug from claim
+    const slug = claim
+      .toLowerCase()
+      .replace(/[^a-z0-9가-힣]+/g, '-')  // Allow Korean characters (가-힣)
+      .replace(/(^-|-$)/g, '');
 
     const fact = await prisma.fact.create({
       data: {
         claim,
         answer,
+        slug,
       },
     });
 

@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,8 +15,7 @@ export async function POST(
 
     const userId = Number(session.user.id);
     const { rating } = await request.json();
-    const { id } = await params;
-    const factId = Number(id);
+    const { slug } = await params;
 
     // Validate rating
     if (!['helpful', 'somewhat_helpful', 'not_helpful'].includes(rating)) {
@@ -25,7 +24,7 @@ export async function POST(
 
     // Check if fact exists
     const fact = await prisma.fact.findUnique({
-      where: { id: factId },
+      where: { slug },
     });
 
     if (!fact) {
@@ -36,7 +35,7 @@ export async function POST(
     const vote = await prisma.vote.upsert({
       where: {
         factId_userId: {
-          factId,
+          factId: fact.id,
           userId,
         },
       },
@@ -44,7 +43,7 @@ export async function POST(
         rating,
       },
       create: {
-        factId,
+        factId: fact.id,
         userId,
         rating,
       },
@@ -80,7 +79,7 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -89,14 +88,22 @@ export async function GET(
     }
 
     const userId = Number(session.user.id);
-    const { id } = await params;
-    const factId = Number(id);
+    const { slug } = await params;
+
+    // Get fact by slug
+    const fact = await prisma.fact.findUnique({
+      where: { slug },
+    });
+
+    if (!fact) {
+      return NextResponse.json({ error: 'Fact not found' }, { status: 404 });
+    }
 
     // Get user's vote for this fact
     const vote = await prisma.vote.findUnique({
       where: {
         factId_userId: {
-          factId,
+          factId: fact.id,
           userId,
         },
       },
@@ -114,7 +121,7 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -123,14 +130,22 @@ export async function DELETE(
     }
 
     const userId = Number(session.user.id);
-    const { id } = await params;
-    const factId = Number(id);
+    const { slug } = await params;
+
+    // Get fact by slug
+    const fact = await prisma.fact.findUnique({
+      where: { slug },
+    });
+
+    if (!fact) {
+      return NextResponse.json({ error: 'Fact not found' }, { status: 404 });
+    }
 
     // Remove user's vote for this fact
     const vote = await prisma.vote.delete({
       where: {
         factId_userId: {
-          factId,
+          factId: fact.id,
           userId,
         },
       },

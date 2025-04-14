@@ -9,6 +9,7 @@ type Fact = {
   id: number;
   claim: string;
   answer: string;
+  slug: string;
   createdAt: string;
   votes?: {
     rating: string;
@@ -20,7 +21,7 @@ type Fact = {
   };
 };
 
-export default function FactPage({ params }: { params: Promise<{ id: string }> }) {
+export default function FactPage({ params }: { params: Promise<{ slug: string }> }) {
   const [fact, setFact] = useState<Fact | null>(null);
   const [loading, setLoading] = useState(true);
   const [userVote, setUserVote] = useState<string | null>(null);
@@ -29,14 +30,14 @@ export default function FactPage({ params }: { params: Promise<{ id: string }> }
 
   const fetchFact = useCallback(async () => {
     try {
-      const { id } = await params;
-      const res = await fetch(`/api/facts/${id}`);
+      const { slug } = await params;
+      const res = await fetch(`/api/facts/${slug}`);
       const data = await res.json();
       setFact(data);
      
       // Fetch user's vote if authenticated
       if (status === 'authenticated') {
-        const voteRes = await fetch(`/api/facts/${id}/vote`);
+        const voteRes = await fetch(`/api/facts/${slug}/vote`);
         const voteData = await voteRes.json();
         if (voteData?.rating) {
           setUserVote(voteData.rating);
@@ -60,8 +61,8 @@ export default function FactPage({ params }: { params: Promise<{ id: string }> }
         return;
       }
 
-      const { id } = await params;
-      const res = await fetch(`/api/facts/${id}/vote`, {
+      const { slug } = await params;
+      const res = await fetch(`/api/facts/${slug}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -75,6 +75,7 @@ model Fact {
   id        Int      @id @default(autoincrement())
   claim     String
   answer    String
+  slug      String   @unique
   createdAt DateTime @default(now())
   votes     Vote[]
 }

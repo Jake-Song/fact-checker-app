@@ -7,6 +7,7 @@ type Fact = {
   id: number;
   claim: string;
   answer: string;
+  slug: string;
   createdAt: string;
   votes?: {
     rating: string;
@@ -43,12 +44,15 @@ export default function Home() {
     fetchFacts();
   }, [fetchFacts]);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(slug: string) {
     try {
-      await fetch(`/api/facts/${id}`, {
+      const res = await fetch(`/api/facts/${slug}`, {
         method: 'DELETE',
       });
-      await fetchFacts(); // Refresh the list after deletion
+      
+      if (res.ok) {
+        setFacts(facts.filter(fact => fact.slug !== slug));
+      }
     } catch (error) {
       console.error('Error deleting fact:', error);
     }
@@ -75,14 +79,14 @@ export default function Home() {
             {facts.map((fact) => (
               <Link 
                 key={fact.id} 
-                href={`/facts/${fact.id}`}
+                href={`/facts/${fact.slug}`}
                 className="block border border-gray-200 rounded-lg hover:border-blue-500 transition-all duration-200 w-[400px]"
               >
                 <div className="p-8 shadow-sm relative">
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
-                      handleDelete(fact.id);
+                      handleDelete(fact.slug);
                     }} 
                     className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-2"
                     aria-label="Delete fact"
