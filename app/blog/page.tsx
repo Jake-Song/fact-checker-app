@@ -7,6 +7,7 @@ type Post = {
   id: number;
   title: string;
   content: string;
+  slug: string;
   createdAt: string;
   authorId: number;
 };
@@ -56,7 +57,7 @@ export default function BlogPage() {
           posts.map((post) => (
             <div key={post.id} className="p-6 w-full relative border-b border-gray-200">
               <div className="mt-4 mb-4">
-                <Link href={`/blog/${post.id}`} className="hover:text-blue-600">
+                <Link href={`/blog/${post.slug}`} className="hover:text-blue-600">
                   <h2 className="font-bold text-5xl">{post.title}</h2>
                 </Link>
                 <p className="mt-8 whitespace-pre-wrap line-clamp-3 text-gray-600">{createExcerpt(post.content)}</p>

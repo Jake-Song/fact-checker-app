@@ -12,6 +12,7 @@ type Post = {
   id: number;
   title: string;
   content: string;
+  slug: string;
   status: string;
   createdAt: string;
 };
@@ -44,7 +45,7 @@ export default function AdminPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [editingPostSlug, setEditingPostSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -76,16 +77,16 @@ export default function AdminPage() {
     e.preventDefault();
     setLoading(true);
 
-    if (editingPostId) {
+    if (editingPostSlug) {
       // Edit mode
-      await fetch(`/api/posts/${editingPostId}`, {
+      await fetch(`/api/posts/${editingPostSlug}`, {
         method: 'PUT',
         body: JSON.stringify({ title, content, status }),
         headers: { 
           'Content-Type': 'application/json',
         },
       });
-      setEditingPostId(null);
+      setEditingPostSlug(null);
     } else {
       // Create mode
       await fetch('/api/posts', {
@@ -103,26 +104,26 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleDelete(id: number) {
-    await fetch(`/api/posts/${id}`, {
+  async function handleDelete(slug: string) {
+    await fetch(`/api/posts/${slug}`, {
       method: 'DELETE',
     });
     await fetchPosts();
   }
 
-  async function handlePublish(id: number) {
-    await fetch(`/api/posts/${id}`, {
+  async function handlePublish(slug: string) {
+    await fetch(`/api/posts/${slug}`, {
       method: 'PUT',
       body: JSON.stringify({ status: 'published' }),
       headers: { 
         'Content-Type': 'application/json',
-      },
+      },  
     });
     await fetchPosts();
   }
 
   function handleEdit(post: Post) {
-    setEditingPostId(post.id);
+    setEditingPostSlug(post.slug);
     setTitle(post.title);
     setContent(post.content);
   }
@@ -176,7 +177,7 @@ export default function AdminPage() {
                     className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading}
                   >
-                    {editingPostId ? (loading ? 'Saving...' : 'Save as Draft') : (loading ? 'Creating...' : 'Save as Draft')}
+                    {editingPostSlug ? (loading ? 'Saving...' : 'Save as Draft') : (loading ? 'Creating...' : 'Save as Draft')}
                   </button>
                   <button
                     type="button"
@@ -184,13 +185,13 @@ export default function AdminPage() {
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={loading}
                   >
-                    {editingPostId ? (loading ? 'Publishing...' : 'Publish') : (loading ? 'Creating...' : 'Publish')}
+                    {editingPostSlug ? (loading ? 'Publishing...' : 'Publish') : (loading ? 'Creating...' : 'Publish')}
                   </button>
-                  {editingPostId && (
+                  {editingPostSlug && (
                     <button
                       type="button"
                       onClick={() => {
-                        setEditingPostId(null);
+                        setEditingPostSlug(null);
                         setTitle('');
                         setContent('');
                       }}
@@ -266,20 +267,22 @@ export default function AdminPage() {
                     <div className="flex gap-2">
                       {post.status === 'draft' && (
                         <button
-                          onClick={() => handlePublish(post.id)}
+                          onClick={() => handlePublish(post.slug)}
                           className="text-sm text-green-600 hover:text-green-500"
                         >
                           Publish
                         </button>
                       )}
                       <button
-                        onClick={() => handleEdit(post)}
+                        onClick={() => {
+                          handleEdit(post);
+                        }}
                         className="text-sm text-blue-600 hover:text-blue-500"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(post.id)}
+                        onClick={() => handleDelete(post.slug)}
                         className="text-sm text-red-600 hover:text-red-500"
                       >
                         Delete

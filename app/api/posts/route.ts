@@ -37,11 +37,18 @@ export async function POST(request: Request) {
     const userId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
 
     const { title, content, status } = await request.json();
+    
+    // Generate slug from title
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9가-힣]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
     const post = await prisma.post.create({
       data: {
         title,
         content,
+        slug,
         status: status || 'draft',
         authorId: userId,
       },

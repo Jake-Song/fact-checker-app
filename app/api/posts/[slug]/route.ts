@@ -3,15 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const post = await prisma.post.findUnique({ where: { id: Number(id) } });
+export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await prisma.post.findUnique({ where: { slug } });
   return Response.json(post);
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,23 +22,33 @@ export async function PUT(
     const userId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
 
     const updates = await request.json();
-    const { id } = await params;
+    const { slug } = await params;
 
     // Check if post belongs to user
     const existingPost = await prisma.post.findUnique({
-      where: { id: Number(id) },
+      where: { slug },
     });
 
     if (!existingPost || existingPost.authorId !== userId) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
+    // Generate new slug if title is being updated
+    let newSlug = existingPost.slug;
+    if (updates.title && updates.title !== existingPost.title) {
+      newSlug = updates.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    }
+
     const post = await prisma.post.update({
-      where: { id: Number(id) },
+      where: { slug },
       data: {
         title: updates.title ?? existingPost.title,
         content: updates.content ?? existingPost.content,
         status: updates.status ?? existingPost.status,
+        slug: newSlug,
       },
     });
 
@@ -54,7 +64,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -64,11 +74,11 @@ export async function DELETE(
 
     const userId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
 
-    const { id } = await params;
+    const { slug } = await params;
 
     // Check if post belongs to user
     const existingPost = await prisma.post.findUnique({
-      where: { id: Number(id) },
+      where: { slug },
     });
 
     if (!existingPost || existingPost.authorId !== userId) {
@@ -76,7 +86,7 @@ export async function DELETE(
     }
 
     await prisma.post.delete({
-      where: { id: Number(id) },
+      where: { slug },
     });
 
     return NextResponse.json({ message: 'Post deleted successfully' });

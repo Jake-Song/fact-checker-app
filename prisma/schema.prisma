@@ -63,6 +63,7 @@ model Post {
   id        Int      @id @default(autoincrement())
   title     String
   content   String
+  slug      String   @unique
   status    String   @default("draft")
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int

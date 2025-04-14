@@ -14,15 +14,15 @@ type Post = {
   authorId: number;
 };
 
-export default function PostPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPost = useCallback(async () => {
     try {
-      const { id } = await params;
-      const res = await fetch(`/api/posts/${id}`);
+      const { slug } = await params;
+      const res = await fetch(`/api/posts/${slug}`);
       if (!res.ok) {
         throw new Error('Post not found');
       }
