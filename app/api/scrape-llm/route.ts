@@ -3,12 +3,11 @@ import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize the Anthropic client
 const anthropic = new Anthropic();
-
 export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { scrapedData, prompt, model = 'claude-3-5-sonnet-20240620' } = body;
+    const { scrapedData, model = 'claude-3-5-sonnet-20240620' } = body;
 
     if (!scrapedData) {
       return NextResponse.json(
@@ -19,28 +18,27 @@ export async function POST(request: Request) {
 
     // Prepare the content for the LLM
     const content = `
-Title: ${scrapedData.title}
-Description: ${scrapedData.description}
 
-Content:
-${scrapedData.mainContent}
+        Title: ${scrapedData.title}
+        Description: ${scrapedData.description}
 
-Key Headings:
-${scrapedData.headings.join('\n')}
+        Content:
+        ${scrapedData.mainContent}
 
-URL: ${scrapedData.url}
-`;
+        URL: ${scrapedData.url}
+    `;
 
     // Create the message
     const response = await anthropic.messages.create({
       model,
+      system: "너는 팩트체커야. 주어진 url의 웹사이트에 대해 사용자의 질문에 대한 답변을 제공해야해. 답변은 한국어로 제공해야해.",
       messages: [
         {
           role: 'user',
-          content: `${prompt || 'Analyze the following content and provide a summary of the key points:'}\n\n${content}`
+          content: `${content}`
         }
       ],
-      max_tokens: 4096,
+      max_tokens: 1024,
     });
 
     return NextResponse.json(response);

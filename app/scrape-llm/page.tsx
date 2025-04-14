@@ -25,10 +25,8 @@ export default function ScrapeLLMPage() {
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [llmResponse, setLLMResponse] = useState<LLMResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState('Analyze the following content and provide a summary of the key points:');
   const [showScrapedData, setShowScrapedData] = useState(true);
-  const [analysisType, setAnalysisType] = useState('summary');
-
+ 
   const handleScrape = async () => {
     if (!url) return;
     
@@ -77,7 +75,6 @@ export default function ScrapeLLMPage() {
         },
         body: JSON.stringify({
           scrapedData,
-          prompt,
           model: 'claude-3-5-sonnet-20240620'
         }),
       });
@@ -97,31 +94,6 @@ export default function ScrapeLLMPage() {
       setError(error instanceof Error ? error.message : 'Failed to process with LLM');
     } finally {
       setProcessing(false);
-    }
-  };
-
-  const handleAnalysisTypeChange = (type: string) => {
-    setAnalysisType(type);
-    
-    // Update the prompt based on the analysis type
-    switch (type) {
-      case 'summary':
-        setPrompt('Analyze the following content and provide a summary of the key points:');
-        break;
-      case 'fact-check':
-        setPrompt('Fact-check the following content and identify any potential inaccuracies or misleading statements:');
-        break;
-      case 'extract':
-        setPrompt('Extract the main facts and key information from the following content:');
-        break;
-      case 'compare':
-        setPrompt('Compare the following content with known facts and identify any discrepancies:');
-        break;
-      case 'custom':
-        // Keep the current prompt
-        break;
-      default:
-        setPrompt('Analyze the following content and provide a summary of the key points:');
     }
   };
 
@@ -165,67 +137,8 @@ export default function ScrapeLLMPage() {
                 <h2 className="text-lg font-semibold">Process with LLM</h2>
                 
                 {/* Analysis Type Selection */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <button
-                    onClick={() => handleAnalysisTypeChange('summary')}
-                    className={`px-4 py-2 rounded-lg ${
-                      analysisType === 'summary' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Summary
-                  </button>
-                  <button
-                    onClick={() => handleAnalysisTypeChange('fact-check')}
-                    className={`px-4 py-2 rounded-lg ${
-                      analysisType === 'fact-check' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Fact Check
-                  </button>
-                  <button
-                    onClick={() => handleAnalysisTypeChange('extract')}
-                    className={`px-4 py-2 rounded-lg ${
-                      analysisType === 'extract' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Extract Facts
-                  </button>
-                  <button
-                    onClick={() => handleAnalysisTypeChange('compare')}
-                    className={`px-4 py-2 rounded-lg ${
-                      analysisType === 'compare' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Compare
-                  </button>
-                  <button
-                    onClick={() => handleAnalysisTypeChange('custom')}
-                    className={`px-4 py-2 rounded-lg ${
-                      analysisType === 'custom' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    Custom
-                  </button>
-                </div>
-                
                 <div className="flex flex-col gap-2">
-                  <textarea
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    className="p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none min-h-[100px]"
-                    placeholder="Enter your prompt for the LLM..."
-                  />
-                  <button
+                    <button
                     onClick={handleProcessWithLLM}
                     disabled={processing || !scrapedData}
                     className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed self-end"
@@ -239,7 +152,7 @@ export default function ScrapeLLMPage() {
               {llmResponse && (
                 <div className="space-y-2">
                   <h2 className="text-lg font-semibold">LLM Analysis</h2>
-                  <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
+                  <div className="p-4 rounded-lg whitespace-pre-wrap">
                     {llmResponse.content}
                   </div>
                 </div>
@@ -265,7 +178,7 @@ export default function ScrapeLLMPage() {
                   {/* Title */}
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold">Title</h3>
-                    <div className="p-4 rounded-lg bg-gray-50">
+                    <div className="p-4 rounded-lg">
                       {scrapedData.title || 'No title found'}
                     </div>
                   </div>
@@ -273,93 +186,16 @@ export default function ScrapeLLMPage() {
                   {/* Description */}
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold">Meta Description</h3>
-                    <div className="p-4 rounded-lg bg-gray-50">
+                    <div className="p-4 rounded-lg">
                       {scrapedData.description || 'No description found'}
                     </div>
                   </div>
 
-                  {/* Headings */}
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Headings</h3>
-                    <div className="space-y-2">
-                      {scrapedData.headings.length > 0 ? (
-                        scrapedData.headings.map((heading, index) => (
-                          <div key={index} className="p-4 rounded-lg bg-gray-50">
-                            {heading}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 rounded-lg bg-gray-50">
-                          No headings found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Main Content */}
+                 {/* Main Content */}
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold">Main Content</h3>
-                    <div className="p-4 rounded-lg bg-gray-50 max-h-[300px] overflow-y-auto">
+                    <div className="p-4 rounded-lg max-h-[300px] overflow-y-auto">
                       {scrapedData.mainContent || 'No main content found'}
-                    </div>
-                  </div>
-
-                  {/* Paragraphs */}
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Paragraphs</h3>
-                    <div className="space-y-2">
-                      {scrapedData.paragraphs.length > 0 ? (
-                        scrapedData.paragraphs.map((paragraph, index) => (
-                          <div key={index} className="p-4 rounded-lg bg-gray-50">
-                            {paragraph}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 rounded-lg bg-gray-50">
-                          No paragraphs found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Links */}
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Links</h3>
-                    <div className="space-y-2">
-                      {scrapedData.links.length > 0 ? (
-                        scrapedData.links.map((link, index) => (
-                          <div key={index} className="p-4 rounded-lg bg-gray-50">
-                            <a href={link.href} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                              {link.text}
-                            </a>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 rounded-lg bg-gray-50">
-                          No links found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Images */}
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Images</h3>
-                    <div className="space-y-2">
-                      {scrapedData.images.length > 0 ? (
-                        scrapedData.images.map((image, index) => (
-                          <div key={index} className="p-4 rounded-lg bg-gray-50">
-                            <p className="font-medium">{image.alt || 'No alt text'}</p>
-                            <a href={image.src} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm">
-                              {image.src}
-                            </a>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 rounded-lg bg-gray-50">
-                          No images found
-                        </div>
-                      )}
                     </div>
                   </div>
                 </>

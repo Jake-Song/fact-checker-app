@@ -74,39 +74,10 @@ export async function POST(request: Request) {
       .replace(/\n+/g, '\n') // Replace multiple newlines with a single newline
       .trim();
     
-    // Extract paragraphs
-    const paragraphs = $('p').map((_, el) => {
-      const text = $(el).text().trim();
-      return text;
-    }).get().filter(p => p.length > 20); // Filter out short paragraphs
-    
-    // Extract headings
-    const headings = $('h1, h2, h3').map((_, el) => {
-      return $(el).text().trim();
-    }).get();
-    
-    // Extract links with their text
-    const links = $('a').map((_, el) => {
-      const text = $(el).text().trim();
-      const href = $(el).attr('href');
-      return { text, href };
-    }).get().filter(link => link.text && link.href);
-    
-    // Extract images with their alt text
-    const images = $('img').map((_, el) => {
-      const alt = $(el).attr('alt') || '';
-      const src = $(el).attr('src') || '';
-      return { alt, src };
-    }).get().filter(img => img.src);
-
     return NextResponse.json({
       title,
       description,
       mainContent,
-      paragraphs,
-      headings,
-      links,
-      images,
       url
     });
   } catch (error) {
