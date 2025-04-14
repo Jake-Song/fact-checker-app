@@ -10,13 +10,16 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@auth/prisma-adapter": "^2.8.0",
     "@prisma/client": "^6.5.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "next": "15.2.4",
     "next-auth": "^4.24.11",

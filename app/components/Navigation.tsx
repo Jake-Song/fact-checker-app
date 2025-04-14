@@ -22,6 +22,7 @@ export default function Navigation() {
         
         <Link href="/blog" className="hover:text-gray-600 transition-colors duration-200">Blog</Link>
         <Link href="/facts" className="hover:text-gray-600 transition-colors duration-200">Facts</Link>
+        <Link href="/chat" className="hover:text-gray-600 transition-colors duration-200">Chat</Link>
         
         {status === 'authenticated' ? (
           <>
