@@ -1,5 +1,34 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+// import { tavily } from "@tavily/core";
+
+// const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
+
+// const tools = [
+//   {
+//       "name": "search",
+//       "description": "A tool that searches the web for information.",
+//       "input_schema": {
+//           "type": "object",
+//           "properties": {
+//               "query": {
+//                   "type": "string",
+//                   "description": "The query to search the web for."
+//               }
+//           },
+//           "required": ["query"]
+//       }
+//   }
+// ]
+
+// async function processToolCall(toolName: string, toolInput: any) {
+//   if (toolName === "search") {
+//     const response = await tvly.search(toolInput.query, {
+//       max_results: 5,
+//     });
+//     return response;
+//   }
+// }
 
 // Initialize the Anthropic client
 const anthropic = new Anthropic();
@@ -38,6 +67,7 @@ export async function POST(request: Request) {
           content: `${content}`
         }
       ],
+      // tools: tools as Anthropic.ToolUnion[],
       max_tokens: 1024,
     });
 

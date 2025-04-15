@@ -14,6 +14,7 @@
     "@auth/prisma-adapter": "^2.8.0",
     "@prisma/client": "^6.5.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@tavily/core": "^0.3.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/react-syntax-highlighter": "^15.5.13",
