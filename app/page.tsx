@@ -25,10 +25,8 @@ export default function Home() {
  
   const fetchFacts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/facts', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await fetch('/api/facts');
+      
       if (res.ok) {
         const data = await res.json();
         setFacts(data);
