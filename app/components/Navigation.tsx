@@ -26,8 +26,12 @@ export default function Navigation() {
         
         {status === 'authenticated' ? (
           <>
-            <Link href="/scrape-llm" className="hover:text-gray-600 transition-colors duration-200">Scrape LLM</Link>
-            <Link href="/admin" className="hover:text-gray-600 transition-colors duration-200">Admin</Link>
+          {session?.user?.isAdmin && (
+            <>
+              <Link href="/scrape-llm" className="hover:text-gray-600 transition-colors duration-200">Scrape LLM</Link>
+              <Link href="/admin" className="hover:text-gray-600 transition-colors duration-200">Admin</Link>
+            </>
+          )}
             <button 
               onClick={handleSignOut}
               className="hover:text-gray-600 transition-colors duration-200"
