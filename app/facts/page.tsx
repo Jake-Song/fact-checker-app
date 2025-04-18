@@ -21,6 +21,73 @@ type Fact = {
   };
 };
 
+function SideMenu({ facts, handleEdit, handleDelete, handlePublish }: { 
+  facts: Fact[]; 
+  handleEdit: (fact: Fact) => void;
+  handleDelete: (slug: string) => void;
+  handlePublish: (slug: string) => void;
+}) {
+  return (
+    <div className="w-64 h-screen text-white p-4 mt-8 overflow-y-auto">
+      {/* Facts List */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4">Your Fact Checks</h2>
+        <div className="space-y-4">
+          {facts.map((fact) => (
+            <div key={fact.id} className="border border-gray-700 rounded-lg p-3 shadow-md bg-gray-800">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-sm font-semibold line-clamp-2">{fact.claim}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                    fact.status === 'published' 
+                      ? 'bg-green-900 text-green-200' 
+                      : 'bg-yellow-900 text-yellow-200'
+                  }`}>
+                    {fact.status === 'published' ? 'Published' : 'Draft'}
+                </span>
+              </div>
+              {fact.tag && (
+                <p className="text-gray-400 text-xs mb-2">
+                  <span className="font-semibold">Tag:</span> {fact.tag}
+                </p>
+              )}
+              <div className="flex justify-between items-center mt-2">
+                <small className="text-gray-400 text-xs">
+                  {new Date(fact.createdAt).toLocaleDateString()}
+                </small>
+                <div className="flex gap-1">
+                   {fact.status === 'draft' && (
+                      <button
+                        onClick={() => handlePublish(fact.slug)}
+                        className="text-xs text-green-400 hover:text-green-300"
+                      >
+                        Publish
+                      </button>
+                    )}
+                  <button
+                    onClick={() => handleEdit(fact)}
+                    className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(fact.slug)}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {facts.length === 0 && (
+            <p className="text-gray-400 text-center py-4 text-sm">No fact checks yet. Create your first one!</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FactsPage() {
   const [facts, setFacts] = useState<Fact[]>([]);
   const [claim, setClaim] = useState('')
@@ -151,12 +218,16 @@ export default function FactsPage() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-[800px]">
-        <div className="w-full flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Create New Fact Check</h1>
-        </div>
-        
+    <div className="flex min-h-screen mt-8">
+      <SideMenu 
+        facts={facts} 
+        handleEdit={handleEdit} 
+        handleDelete={handleDelete} 
+        handlePublish={handlePublish} 
+      />
+      <div className="flex-1 p-8">
+        <main className="max-w-[800px] mx-auto">
+                 
         {/* Writing Interface */}
         <form onSubmit={(e) => handleSubmit(e, 'draft')} className="w-full space-y-6">
           {/* Claim Input */}
@@ -280,69 +351,8 @@ export default function FactsPage() {
             )}
           </div>
         </form>
-
-        {/* Facts List */}
-        <div className="w-full mt-8">
-          <h2 className="text-xl font-bold mb-4">Your Fact Checks</h2>
-          <div className="space-y-6">
-            {facts.map((fact) => (
-              <div key={fact.id} className="border-2 border-gray-300 rounded-lg p-6 shadow-md">
-                <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-semibold">{fact.claim}</h2>
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                      fact.status === 'published' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {fact.status === 'published' ? 'Published' : 'Draft'}
-                  </span>
-                </div>
-                <p className="text-gray-700 mb-4">{fact.answer}</p>
-                {fact.tag && (
-                  <p className="text-gray-500 mb-4">
-                    <span className="font-semibold">Tag:</span> {fact.tag}
-                  </p>
-                )}
-                <div className="flex justify-between items-center">
-                  <small className="text-gray-500">
-                    Created on {new Date(fact.createdAt).toLocaleString()}
-                    {fact.author && (
-                      <span className="ml-2">
-                        by {fact.author.name || fact.author.email || 'Unknown'}
-                      </span>
-                    )}
-                  </small>
-                  <div className="flex gap-2">
-                     {fact.status === 'draft' && (
-                        <button
-                          onClick={() => handlePublish(fact.slug)}
-                          className="text-sm text-green-600 hover:text-green-500"
-                        >
-                          Publish
-                        </button>
-                      )}
-                    <button
-                      onClick={() => handleEdit(fact)}
-                      className="text-sm text-blue-600 hover:text-blue-500"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(fact.slug)}
-                      className="text-sm text-red-600 hover:text-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {facts.filter(fact => fact.status === 'published').length === 0 && (
-              <p className="text-gray-500 text-center py-4">No published fact checks yet. Create and publish your first one above!</p>
-            )}
-          </div>
-        </div>
       </main>
+      </div>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         {/* footer content */}
       </footer>
