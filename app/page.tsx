@@ -69,8 +69,29 @@ export default function Home() {
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <h1 className="text-2xl font-bold">Claims</h1>
+      <main className="flex flex-col gap-[32px] row-start-2 items-center w-full">
+        <div className="text-center max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-4">Fact Checker</h1>
+          <p className="text-gray-600 mb-6">
+            Welcome to our fact-checking platform. Here you can explore verified claims, 
+            discover the truth behind statements, and contribute to a more informed community.
+          </p>
+          <div className="flex justify-center gap-4 mb-8">
+            <Link 
+              href="/facts" 
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              New Claim
+            </Link>
+            <Link 
+              href="/blog" 
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Blog
+            </Link>
+          </div>
+        </div>
+        <h2 className="text-2xl font-bold text-center w-full">Claims</h2>
         {facts.length === 0 ? (
           <div className="text-gray-500">No facts added yet. Add some in the facts page!</div>
         ) : (
