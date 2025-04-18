@@ -18,6 +18,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
       where: { slug }, 
       include: {
         votes: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
       },
     }) as FactWithVotes;
     
@@ -49,7 +56,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { claim, answer } = await req.json();
+    const { claim, answer, status } = await req.json();
     const { slug } = await params;
     
     // Generate new slug if claim is being updated
@@ -67,6 +74,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
         claim, 
         answer,
         slug: newSlug,
+        ...(status && { status }),
       },
     });
     return Response.json(updated);

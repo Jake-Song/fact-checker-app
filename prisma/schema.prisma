@@ -46,6 +46,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
+  facts         Fact[]
   votes         Vote[]
   apiTokens     ApiToken[]
   createdAt     DateTime  @default(now())
@@ -77,6 +78,9 @@ model Fact {
   claim     String
   answer    String
   slug      String   @unique
+  status    String   @default("draft")
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
   createdAt DateTime @default(now())
   votes     Vote[]
 }

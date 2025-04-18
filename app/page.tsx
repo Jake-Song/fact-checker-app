@@ -8,6 +8,7 @@ type Fact = {
   claim: string;
   answer: string;
   slug: string;
+  status: string;
   createdAt: string;
   votes?: {
     rating: string;
@@ -25,7 +26,7 @@ export default function Home() {
  
   const fetchFacts = useCallback(async () => {
     try {
-      const res = await fetch('/api/facts');
+      const res = await fetch('/api/facts/public');
       
       if (res.ok) {
         const data = await res.json();

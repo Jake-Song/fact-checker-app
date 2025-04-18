@@ -13,6 +13,7 @@ type Fact = {
   claim: string;
   answer: string;
   slug: string;
+  status: string;
   createdAt: string;
   votes?: {
     rating: string;

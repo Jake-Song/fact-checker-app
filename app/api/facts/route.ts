@@ -17,7 +17,15 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
       include: {
         votes: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
       },
+      where: { authorId: userId },
     }) as FactWithVotes[];
 
     // Filter votes for authenticated user and calculate vote counts
@@ -58,7 +66,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 401 });
     }
 
-    const { claim, answer } = await request.json();
+    const { claim, answer, tag, status } = await request.json();
     
     // Generate slug from claim
     const slug = claim
@@ -71,6 +79,8 @@ export async function POST(request: Request) {
         claim,
         answer,
         slug,
+        status: status || 'draft',
+        authorId: userId,
       },
     });
 
