@@ -49,6 +49,22 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    if (path.startsWith('/chat')) {
+      const session = await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
+
+      // Check if the user is not authenticated or not an admin
+      if (!session) {
+        return NextResponse.redirect(new URL('/auth', request.url));
+      }
+
+      if (!session.isAdmin) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+    }
+
     // Handle API routes
     if (path.startsWith('/api')) {
       // Add API-specific headers
