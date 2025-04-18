@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import type { Components } from 'react-markdown'
 
 type Post = {
   id: number;
@@ -222,11 +223,13 @@ export default function AdminPage() {
                     // Override paragraph component
                     p: ({node, ...props}) => <p className="mb-4" {...props} />,
                     // Keep the existing code component
-                    code({ node, inline, className, children, ...props }: any) {
+                    // @ts-expect-error - ReactMarkdown component types are complex
+                    code: ({ node, inline, className, children, ...props }) => {
                       const match = /language-(\w+)/.exec(className || '')
                       return !inline && match ? (
                         <SyntaxHighlighter
-                          style={vscDarkPlus as any}
+                          // @ts-expect-error - SyntaxHighlighter style type is complex
+                          style={vscDarkPlus}
                           language={match[1]}
                           PreTag="div"
                           {...props}

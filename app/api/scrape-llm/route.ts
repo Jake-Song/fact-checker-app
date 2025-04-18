@@ -23,7 +23,7 @@ const tools: Anthropic.Tool[] = [
   }
 ];
 
-async function processToolCall(toolName: string, toolInput: any) {
+async function processToolCall(toolName: string, toolInput: Record<string, string>) {
   if (toolName === "search") {
     const result = await searchWeb(toolInput.query);
     return result;
@@ -61,7 +61,7 @@ async function chat(messages: Anthropic.MessageParam[], model: string) {
   } else {
     return message;
   }
-  const toolResult = await processToolCall(tool.name, tool.input);
+  const toolResult = await processToolCall(tool.name, tool.input as Record<string, string>);
   const result = await client.messages.create({
     model: model,
     max_tokens: 1024,

@@ -143,11 +143,13 @@ export default function FactPage({ params }: { params: Promise<{ slug: string }>
                     // Override paragraph component
                     p: ({node, ...props}) => <p className="mb-4" {...props} />,
                     // Keep the existing code component
-                    code({ node, inline, className, children, ...props }: any) {
+                    // @ts-expect-error - ReactMarkdown component types are complex
+                    code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '')
                       return !inline && match ? (
                         <SyntaxHighlighter
-                          style={vscDarkPlus as any}
+                          // @ts-expect-error - SyntaxHighlighter style type is complex
+                          style={vscDarkPlus}
                           language={match[1]}
                           PreTag="div"
                           {...props}

@@ -25,7 +25,7 @@ export async function GET(request: Request) {
           }
         }
       },
-      where: { authorId: userId },
+      where: { authorId: userId ? userId : undefined },
     }) as FactWithVotes[];
 
     // Filter votes for authenticated user and calculate vote counts

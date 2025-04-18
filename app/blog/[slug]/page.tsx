@@ -75,11 +75,21 @@ export default function PostPage({ params }: { params: Promise<{ slug: string }>
             <div className="prose prose-lg max-w-none dark:prose-invert">
               <ReactMarkdown
                 components={{
-                  code({ node, inline, className, children, ...props }: any) {
+                  // Override default heading components to ensure proper styling
+                  h1: ({node, ...props}) => <h1 className="text-4xl font-bold mb-4" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-3xl font-bold mb-3" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="text-2xl font-bold mb-2" {...props} />,
+                  h4: ({node, ...props}) => <h4 className="text-xl font-bold mb-2" {...props} />,
+                  // Override list components
+                  ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-4" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-4" {...props} />,
+                  // @ts-expect-error - ReactMarkdown component types are complex
+                  code({ node, inline, className, children, ...props }) {
                     const match = /language-(\w+)/.exec(className || '')
                     return !inline && match ? (
                       <SyntaxHighlighter
-                        style={vscDarkPlus as any}
+                        // @ts-expect-error - SyntaxHighlighter style type is complex
+                        style={vscDarkPlus}
                         language={match[1]}
                         PreTag="div"
                         {...props}
