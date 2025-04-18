@@ -122,8 +122,12 @@ export default function FactPage({ params }: { params: Promise<{ slug: string }>
             ← Back to Facts
           </Link>
         </div>
-
+       
         <article className="w-full p-6">
+          <div className="mb-6">
+              <h2 className="font-bold text-xl mb-2">Claim:</h2>
+              <p className="mt-2">{fact.claim}</p>
+          </div>
           <div className="prose prose-lg max-w-none dark:prose-invert">
             <ReactMarkdown
                   components={{
@@ -161,16 +165,7 @@ export default function FactPage({ params }: { params: Promise<{ slug: string }>
                   {fact.answer || '*No content to preview*'}
             </ReactMarkdown>
             </div>
-          <div className="mb-6">
-            <h2 className="font-bold text-xl mb-2">Claim:</h2>
-            <p className="mt-2">{fact.claim}</p>
-          </div>
-          
-          <div className="mb-6">
-            <h2 className="font-bold text-xl mb-2">Answer:</h2>
-            <p className="mt-2">{fact.answer}</p>
-          </div>
-
+               
           <div className="text-sm text-gray-500 mb-6">
             Created on {new Date(fact.createdAt).toLocaleString()}
           </div>

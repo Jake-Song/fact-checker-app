@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import ChatMessage from '../components/ChatMessage'
 
 type Fact = {
   id: number;
@@ -20,6 +21,11 @@ type Fact = {
     email: string | null;
   };
 };
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 function SideMenu({ facts, handleEdit, handleDelete, handlePublish }: { 
   facts: Fact[]; 
@@ -97,6 +103,20 @@ export default function FactsPage() {
   const [editingFactSlug, setEditingFactSlug] = useState<string | null>(null);
   const router = useRouter()
   const { data: session, status } = useSession()
+  
+  // Chat state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const fetchFacts = useCallback(async () => {
     try {
@@ -217,6 +237,57 @@ export default function FactsPage() {
     setTag(fact.tag || '');
   }
 
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMessage: Message = { role: 'user', content: chatInput.trim() };
+    setMessages((prev) => [...prev, userMessage]);
+    
+    // Set the claim field to the user's question
+    setClaim(chatInput.trim());
+    
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.output_text,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Set the answer field to the AI's response
+      setAnswer(data.output_text);
+    } catch (error) {
+      console.error('Error:', error);
+      // Add error message to chat
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen mt-8">
       <SideMenu 
@@ -227,7 +298,35 @@ export default function FactsPage() {
       />
       <div className="flex-1 p-8">
         <main className="max-w-[800px] mx-auto">
-                 
+
+         {/* Chat Interface */}
+         <div className="border-t pt-8">
+          <h2 className="text-2xl font-bold mb-4">AI Assistant</h2>
+          <div className="rounded-lg shadow-lg p-6">
+            <form onSubmit={handleChatSubmit} className="flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask for help with your fact check..."
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white"
+                disabled={isChatLoading}
+              />
+              <button
+                type="submit"
+                disabled={isChatLoading}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  isChatLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+              >
+                {isChatLoading ? 'Sending...' : 'Send'}
+              </button>
+            </form>
+          </div>
+        </div>
+
         {/* Writing Interface */}
         <form onSubmit={(e) => handleSubmit(e, 'draft')} className="w-full space-y-6">
           {/* Claim Input */}
@@ -351,6 +450,7 @@ export default function FactsPage() {
             )}
           </div>
         </form>
+            
       </main>
       </div>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">

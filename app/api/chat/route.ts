@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     console.log("messages history", messages);
    
     const instructions = `
-    .md 파일로 저장할 수 있게 마크다운 형식으로 제공해줘. 
+    답변은 .md 파일로 저장할 수 있게 마크다운 형식으로 제공해줘. 
     팩트 체크 외의 요청은 "수행할 수 없습니다"고 답변해줘.
     `
     const response = await client.responses.create({
