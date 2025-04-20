@@ -105,7 +105,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[20px_1fr_20px] justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-[400px]">
         <div className="w-full">
           <h1 className="text-2xl font-bold mb-8 text-center">Welcome to Fact Checker</h1>
@@ -140,7 +140,7 @@ export default function AuthPage() {
               Sign in with Google
             </button>
 
-            <div className="relative my-4">
+            {/* <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -196,10 +196,10 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </div>
+              </div> */}
 
               {/* Wrap the error handler in Suspense */}
-              <Suspense fallback={<div>Loading...</div>}>
+              {/* <Suspense fallback={<div>Loading...</div>}>
                 <ErrorHandler />
               </Suspense>
 
@@ -210,9 +210,9 @@ export default function AuthPage() {
               >
                 {loading ? 'Processing...' : isLogin ? 'Sign in' : 'Register'}
               </button>
-            </form>
+            </form> */}
 
-            <div className="mt-6 text-center">
+            {/* <div className="mt-6 text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-blue-600 hover:text-blue-500"
@@ -221,7 +221,7 @@ export default function AuthPage() {
                   ? "Don't have an account? Register"
                   : 'Already have an account? Sign in'}
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>
