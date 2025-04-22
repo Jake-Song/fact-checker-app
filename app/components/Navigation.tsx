@@ -30,6 +30,7 @@ export default function Navigation() {
               <Link href="/scrape-llm" className="hover:text-gray-600 transition-colors duration-200">Scrape LLM</Link>
               <Link href="/admin" className="hover:text-gray-600 transition-colors duration-200">Admin</Link>
               <Link href="/chat" className="hover:text-gray-600 transition-colors duration-200">Chat</Link>
+              <Link href="/polis" className="hover:text-gray-600 transition-colors duration-200">Polis</Link>
             </>
           )}
             <button 
